@@ -1,0 +1,50 @@
+version: "3"
+services:
+  influxdb:
+    image: influxdb:alpine
+    container_name: influxdb
+    networks:
+      monitor:
+        ipv4_address: 172.19.0.4
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./influxdb_data:/var/lib/influxdb
+    environment:
+      - INFLUXDB_DB=test
+  influxdbOld:
+    image: influxdb:1.7
+    container_name: influxdbOld
+    networks:
+      monitor:
+        ipv4_address: 172.19.0.5
+    ports:
+      - "18086:8086"
+    volumes:
+      - ./influxdb_dataOld:/var/lib/influxdb
+      - ./influxdb_dataOld/conf/influxdb.conf:/etc/influxdb/influxdb.conf
+    environment:
+      - INFLUXDB_DB=test
+  grafana:
+    image: grafana/grafana:10.3.5
+    container_name: grafana
+    networks:
+      monitor:
+        ipv4_address: 172.19.0.6
+    ports:
+      - "3000:3000"
+    depends_on:
+      - influxdb
+    volumes:
+      - ./grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
+networks:
+  monitor:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
